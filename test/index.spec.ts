@@ -454,4 +454,51 @@ describe('index test', () => {
 		expect(Number(groupedResult.find(g => g.street == 'address1')?.idCount)).toBe(2);
 		expect(Number(groupedResult.find(g => g.street == 'address2')?.idCount)).toBe(1);
 	});
+
+	it('insert successfully new user in transaction without rollback', async () => {
+		const userRow = await db.transaction(async trx => {
+			try {
+				const userRow = await trx.users.insert({
+					name: 'new user'
+				}).returning({
+					id: trx.users.getUnderlyingEntity().id
+				});
+
+				return { id: userRow[0].id };
+			} catch (error) {
+				await trx.rollback();
+			}
+		})
+
+		const users = await db.users.toList();
+		expect(users).toHaveLength(1);
+		expect(userRow).toBeDefined();
+		expect(userRow.id).toBeDefined();
+		expect(users[0].id).toBe(userRow.id);
+	});
+
+	it('fails to insert new user in transaction with rollback', async () => {
+		let userRow: void = null;
+		try {
+			userRow = await db.transaction(async (trx: any) => {
+				try {
+					const userRow = await trx.users.insert({
+						name: 'new user with rollback'
+					}).returning({
+						id: trx.users.getUnderlyingEntity().id
+					});
+
+					throw new Error('Rollback');
+				} catch (error) {
+					await trx.rollback();
+				}
+			});
+		} catch (error) {
+			// drizzle excption
+		} finally {
+			const users = await db.users.toList();
+			expect(users).toHaveLength(0);
+			expect(userRow).toBeNull();
+		}
+	});
 });
