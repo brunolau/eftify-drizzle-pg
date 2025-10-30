@@ -760,4 +760,53 @@ describe('index test', () => {
 		expect(updatedUser).toBeDefined();
 		expect(updatedUser?.name).toBe('Updated User');
 	});
+
+	it('updates user address based on user name', async () => {
+		const [userRow] = await db.users.insert({
+			name: 'User for Address Update',
+			createdAt: new Date(),
+		}).returning({
+			id: schema.users.id
+		});
+
+		const [addressRow] = await db.userAddress.insert({
+			userId: userRow.id,
+			address: 'Old Address',
+		}).returning({
+			id: schema.userAddress.id
+		});
+
+		await db.userAddress.where(ua => eq(ua.user.name, 'User for Address Update')).update({
+			address: 'New Address'
+		});
+
+		const updatedAddress = await db.userAddress.where(ua => eq(ua.id, addressRow.id)).firstOrDefault();
+		expect(updatedAddress).toBeDefined();
+		expect(updatedAddress?.address).toBe('New Address');
+	});
+
+	it('updates post content based on related user name', async () => {
+		const [userRow] = await db.users.insert({
+			name: 'Author Name',
+			createdAt: new Date(),
+		}).returning({
+			id: schema.users.id
+		});
+
+		const [postRow] = await db.posts.insert({
+			content: 'Original Content',
+			authorId: userRow.id,
+			createdAt: new Date(),
+		}).returning({
+			id: schema.posts.id
+		});
+
+		await db.posts.where(p => eq(p.author.name, 'Author Name')).update({
+			content: 'Updated Content'
+		});
+
+		const updatedPost = await db.posts.where(post => eq(post.id, postRow.id)).firstOrDefault();
+		expect(updatedPost).toBeDefined();
+		expect(updatedPost?.content).toBe('Updated Content');
+	});
 });

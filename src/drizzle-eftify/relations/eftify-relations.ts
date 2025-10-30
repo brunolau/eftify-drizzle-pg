@@ -174,7 +174,7 @@ export function eftifyRelations<TTableName extends string, TRelations extends Re
 
         (helpers as any).one = (table: any, config: any) => {
             const builtObj: any = oldOne(table, config);
-            if (config.mandatory == null) {
+            if (config?.mandatory == null) {
                 return builtObj;
             }
 
