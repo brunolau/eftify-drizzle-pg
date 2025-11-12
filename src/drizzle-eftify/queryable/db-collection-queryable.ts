@@ -112,7 +112,7 @@ export class DbCollectionQueryable<TSelection extends SelectedFields<any, any>> 
 		return joinDeclaration as any;
 	}
 
-	toNumberList(): SQL<number[]> {
+	toNumberList(colName?: string): SQL<number[]> {
 		let propName: string = null as any;
 		for (const key in this._baseQuery['_']['selectedFields']) {
 			propName = key
@@ -121,10 +121,15 @@ export class DbCollectionQueryable<TSelection extends SelectedFields<any, any>> 
 
 		const subq = this._baseQuery.as(`fnlsq${counter++}`)
 		const col = subq[propName]
-		return sql`(SELECT COALESCE(array_agg(${col}), '{}') from ${subq})`
+
+		if (!colName) {
+			return sql`(SELECT COALESCE(array_agg(${col}), '{}') from ${subq})`
+		} else {
+			return sql`(SELECT COALESCE(array_agg(${col}), '{}') from ${subq})`.as(colName) as any;
+		}
 	}
 
-	toStringList(): SQL<string[]> {
+	toStringList(colName?: string): SQL<string[]> {
 		let propName: string = null as any;
 		for (const key in this._baseQuery['_']['selectedFields']) {
 			propName = key
@@ -133,7 +138,13 @@ export class DbCollectionQueryable<TSelection extends SelectedFields<any, any>> 
 
 		const subq = this._baseQuery.as(`fnlsq${counter++}`)
 		const col = subq[propName]
-		return sql`(SELECT COALESCE(array_agg(${col}), '{}') from ${subq})`
+
+		if (!colName) {
+			return sql`(SELECT COALESCE(array_agg(${col}), '{}') from ${subq})`
+		} else {
+			return sql`(SELECT COALESCE(array_agg(${col}), '{}') from ${subq})`.as(colName) as any;
+		}
+
 	}
 
 	firstOrDefault(columnName: string): SQL<SelectResult<TSelection, 'single', any> | null> {
