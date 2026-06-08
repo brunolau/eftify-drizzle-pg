@@ -1,3 +1,6 @@
+ABANONED:
+This has been abandoned in favor of custom ORM built using eftify querying principles https://github.com/brunolau/linkgress-orm
+
 # eftify-drizzle-pg
 
 [![npm package][npm-img]][npm-url]
